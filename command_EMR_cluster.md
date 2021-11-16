@@ -14,5 +14,5 @@ aws emr create-cluster \
 ```
 
 ## SSH command to access EMR master
-ssh -i "xxx.pem" hadoop@"Public IPv4 DNS"
+ssh -i "xxx.pem" hadoop@"Public IPv4 DNS for EMR master"
 

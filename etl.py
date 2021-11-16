@@ -60,7 +60,7 @@ def process_log_data(spark, input_data, output_data):
 
     # create timestamp column from original timestamp column
     get_timestamp = udf(lambda x: datetime.fromtimestamp(x/1000), TimestampType())
-    time_df = df.select('song', 'ts').dropDuplicates().withColumn("start_time", get_timestamp(df.ts))
+    time_df = df.select('level', 'location', 'sessionId', 'song', 'ts', 'useragent', 'userId').dropDuplicates().withColumn("start_time", get_timestamp(df.ts))
 
     # extract columns to create time table
     time_df.createOrReplaceTempView('time_df')
