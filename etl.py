@@ -60,7 +60,7 @@ def process_log_data(spark, input_data, output_data):
 
     # create timestamp column from original timestamp column
     get_timestamp = udf(lambda x: datetime.fromtimestamp(x/1000), TimestampType())
-    time_df = df.select('level', 'location', 'sessionId', 'song', 'ts', 'useragent', 'userId').dropDuplicates().withColumn("start_time", get_timestamp(df.ts))
+    time_df = df.select('artist', 'length', 'level', 'location', 'sessionId', 'song', 'ts', 'useragent', 'userId').dropDuplicates().withColumn("start_time", get_timestamp(df.ts))
 
     # extract columns to create time table
     time_df.createOrReplaceTempView('time_df')
@@ -80,9 +80,12 @@ def process_log_data(spark, input_data, output_data):
 
     # read in song data to use for songplays table
     song_df = spark.read.parquet(os.path.join(output_data, 'songs_table.parquet'))
+    artists_df = spark.read.parquet(os.path.join(output_data, 'artists_table.parquet'))
 
     # extract columns from joined song and log datasets to create songplays table 
     song_df.createOrReplaceTempView('song_df')
+    artists_df.createOrReplaceTempView('artists_df')
+
     songplays_table = spark.sql('''
         SELECT  t.start_time,
                 t.userId,
@@ -93,7 +96,8 @@ def process_log_data(spark, input_data, output_data):
                 t.location,
                 t.useragent
         FROM time_df t
-        JOIN song_df s ON (t.song = s.title)
+        JOIN song_df s ON (t.song = s.title) AND (t.length = s.duration)
+        JOIN artists_df a ON (s.artist_id = s.artist_id) AND (t.artist = a.artist_name)
         ''')
 
     # write songplays table to parquet files partitioned by year and month
